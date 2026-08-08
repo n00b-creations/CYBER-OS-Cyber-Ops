@@ -8,10 +8,16 @@
 - [x] Workspace state manager
 - [x] Tool Registry contract
 - [x] Plugin permission boundary
+- [x] Operations service contracts
+- [x] Safe mock operations dataset
+- [x] Dockable/resizable widget engine contract
+- [x] Interactive graph engine contract
+- [x] Filtered event timeline engine
+- [x] Governed AI workspace-context contract
 - [ ] Persistent storage adapter
 - [ ] Desktop shell
 - [ ] Web UI shell
-- [ ] Widget/docking engine
+- [ ] Visual widget components
 
 ## Workspaces
 
@@ -27,22 +33,22 @@
 
 ## Operations
 
-- [ ] Asset service
-- [ ] Event service
-- [ ] Alert service
-- [ ] Case service
-- [ ] Timeline service
-- [ ] Graph service
+- [ ] Asset service implementation
+- [ ] Event service implementation
+- [ ] Alert service implementation
+- [ ] Case service implementation
+- [x] Timeline query contract
+- [x] Graph selection/neighbor contract
 - [ ] Tool metadata importers
 - [ ] Notes service
 
 ## AI
 
-- [ ] Context provider
+- [x] Context provider contract
 - [ ] Copilot interface
 - [ ] Workflow editor
 - [ ] Provider adapters
-- [ ] Agent permission model
+- [ ] Agent permission/approval UI
 
 ## Safety / reliability
 
@@ -53,13 +59,12 @@
 - [ ] Capability approval UI
 - [ ] Secure defaults
 
-## Integration order
+## Next build slice
 
-1. Finish application/package scaffolding.
-2. Add persistent workspace storage.
-3. Build the desktop shell and docking engine.
-4. Build shared mock services for assets/events/alerts/cases/tools.
-5. Implement Red, Blue, Purple, and DFIR views against those services.
-6. Add plugin loading with capability checks.
-7. Add AI context and workflow interfaces.
-8. Add host/container/VM/lab adapters behind explicit interfaces.
+1. Create the desktop/web application shell.
+2. Mount WorkspaceManager + WidgetEngine into the UI.
+3. Render Red/Blue/Purple/DFIR views from profile definitions.
+4. Connect mock assets/events/alerts/cases/tools.
+5. Add selectable asset/alert/graph/timeline drawers.
+6. Add layout persistence and theme state.
+7. Add tests for workspace, widgets, graph, timeline, and AI context.
