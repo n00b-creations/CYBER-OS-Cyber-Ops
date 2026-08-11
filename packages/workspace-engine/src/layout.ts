@@ -26,7 +26,6 @@ export class LayoutController {
     }
     if (command.type === 'dock' && command.dock) panel.dock = command.dock;
     if (command.type === 'collapse' && typeof command.collapsed === 'boolean') panel.collapsed = command.collapsed;
-    workspace.updatedAt = new Date().toISOString();
     return workspace;
   }
 }
