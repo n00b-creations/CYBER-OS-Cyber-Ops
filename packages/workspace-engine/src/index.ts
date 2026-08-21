@@ -185,9 +185,7 @@ export class MultiMonitorManager {
       id: preset.id,
       name: preset.name,
       monitors: this.monitors(),
-      assignments: preset.assignments.filter((assignment) =>
-        this.monitorStore.get(assignment.monitorId),
-      ),
+      assignments: preset.assignments.filter((assignment) => Boolean(this.monitorStore.get(assignment.monitorId))),
     };
   }
 }
@@ -213,6 +211,23 @@ export class WorkspaceManager {
     this.store.save(workspace);
     this.activeId = workspace.id;
     return workspace;
+  }
+
+  applyMonitorLayout(workspaceId: string, monitorLayout: MultiMonitorLayout): Workspace {
+    const workspace = this.store.get(workspaceId);
+    if (!workspace) throw new Error(`Workspace not found: ${workspaceId}`);
+
+    const next: Workspace = {
+      ...workspace,
+      multiMonitorLayoutId: monitorLayout.id,
+      layout: {
+        ...workspace.layout,
+        multiMonitorLayoutId: monitorLayout.id,
+      },
+    };
+
+    this.store.save(next);
+    return next;
   }
 
   switchTo(id: string): Workspace {
