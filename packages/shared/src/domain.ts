@@ -11,11 +11,37 @@ export type WorkspaceProfile =
 
 export type Severity = 'info' | 'low' | 'medium' | 'high' | 'critical';
 
+export type DockPosition = 'left' | 'right' | 'top' | 'bottom' | 'center' | 'floating';
+
+export interface MonitorDefinition {
+  id: string;
+  name: string;
+  width: number;
+  height: number;
+  scale: number;
+  primary: boolean;
+  x: number;
+  y: number;
+}
+
+export interface MonitorAssignment {
+  monitorId: string;
+  layoutId: string;
+}
+
+export interface MultiMonitorLayout {
+  id: string;
+  name: string;
+  monitors: MonitorDefinition[];
+  assignments: MonitorAssignment[];
+}
+
 export interface WorkspaceLayout {
   id: string;
   version: number;
   panels: PanelLayout[];
   monitorId?: string;
+  multiMonitorLayoutId?: string;
 }
 
 export interface PanelLayout {
@@ -25,8 +51,9 @@ export interface PanelLayout {
   y: number;
   width: number;
   height: number;
-  dock?: 'left' | 'right' | 'top' | 'bottom' | 'center' | 'floating';
+  dock?: DockPosition;
   collapsed?: boolean;
+  monitorId?: string;
 }
 
 export interface WidgetInstance {
@@ -124,4 +151,5 @@ export interface Workspace {
   noteIds: string[];
   workflowIds: string[];
   themeId: string;
+  multiMonitorLayoutId?: string;
 }
