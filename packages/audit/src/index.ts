@@ -1,4 +1,4 @@
-export type AuditAction = 'workspace.open' | 'workspace.save' | 'layout.move' | 'layout.resize' | 'layout.dock' | 'plugin.request' | 'workflow.validate' | 'workflow.approve';
+export type AuditAction = 'workspace.open' | 'workspace.save' | 'layout.move' | 'layout.resize' | 'layout.dock' | 'plugin.request' | 'plugin.approve' | 'plugin.deny' | 'workflow.validate' | 'workflow.approve';
 
 export interface AuditEvent {
   id: string;
