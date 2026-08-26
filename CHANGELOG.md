@@ -39,6 +39,19 @@ All notable CYBER-OS platform changes are recorded here by implementation phase.
 - Dependency-first resolution ordering for validation/planning.
 - Detailed Phase 3 Tool Platform documentation.
 
+### Added — Phase 4: Plugin Security Control Plane
+
+- Explicit capability risk classification and default policy decisions.
+- Default allow policy for read-only context capabilities.
+- Approval-required policy for workspace mutation, notes writes, network access, and filesystem access.
+- Default denial for direct terminal execution through plugins.
+- Capability decision evaluation and aggregate admission status.
+- Plugin admission validator combining manifest validation, capability policy, and dependency checks.
+- Optional dependency handling without blocking admission.
+- Exported plugin control-plane APIs through `@cyber-os/plugin-sdk`.
+- Audit actions for plugin approval and denial decisions.
+- Detailed Phase 4 architecture documentation.
+
 ### Workspace Profiles Covered
 
 - Red Team
@@ -61,9 +74,11 @@ The storage contract is intentionally isolated so a future Electron, SQLite, bac
 
 ### Security
 
-Workspace and Tool Registry changes remain metadata/state operations. They do not grant plugins, AI workflows, tools, or UI components direct host execution, network, filesystem, or other privileged capabilities.
+Workspace and Tool Registry changes remain metadata/state operations. Plugins, AI workflows, tools, and UI components do not receive direct host execution, network, filesystem, or other privileged capabilities merely by being registered.
 
 Tool dependency resolution evaluates metadata only and does not install or execute dependencies.
+
+The Phase 4 plugin policy is deliberately fail-closed for direct terminal execution and requires explicit authorization for higher-risk host/network/filesystem capabilities.
 
 ### Documentation
 
@@ -73,7 +88,8 @@ See:
 - `docs/PHASE-1-WORKSPACE-INTERACTION.md` — detailed Phase 1 implementation and interaction model.
 - `docs/PHASE-2-MULTI-MONITOR.md` — detailed Phase 2 monitor model and workspace integration.
 - `docs/PHASE-3-TOOL-PLATFORM.md` — detailed Phase 3 registry, search, capability, and dependency model.
+- `docs/PHASE-4-PLUGIN-SECURITY.md` — detailed Phase 4 admission, policy, and audit model.
 
 ## Next
 
-Phase 4 — Plugin Security Control Plane.
+Phase 4 UI integration and persisted approval state, followed by Phase 5 — AI Operations.
