@@ -1,13 +1,17 @@
 import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { AuthError, Authenticator, requirePermission, type AuthPrincipal } from './auth.js';
-import { audit, ConsoleAuditSink } from './audit.js';
-import { MemoryCrmRepository } from './repository.js';
+import { audit, ConsoleAuditSink, type AuditSink } from './audit.js';
+import { MemoryCrmRepository, type CrmRepository } from './repository.js';
+import { createPostgresPool, PostgresCrmRepository } from './postgres-repository.js';
+import { PostgresAuditSink } from './postgres-audit.js';
 
 const port = Number(process.env.PORT ?? 8787);
 const authenticator = new Authenticator();
-const repository = new MemoryCrmRepository();
-const auditSink = new ConsoleAuditSink();
+const usePostgres = Boolean(process.env.DATABASE_URL);
+const pool = usePostgres ? createPostgresPool() : undefined;
+const repository: CrmRepository = pool ? new PostgresCrmRepository(pool) : new MemoryCrmRepository();
+const auditSink: AuditSink = pool ? new PostgresAuditSink(pool) : new ConsoleAuditSink();
 const startedAt = Date.now();
 
 function json(status: number, body: unknown, correlationId: string): Response {
@@ -22,9 +26,12 @@ async function handle(req: IncomingMessage): Promise<Response> {
   const correlationId = req.headers['x-correlation-id']?.toString() || randomUUID();
 
   if (req.method === 'GET' && url.pathname === '/healthz') {
-    return json(200, { status: 'ok', service: 'jarvis-api', uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000) }, correlationId);
+    return json(200, { status: 'ok', service: 'jarvis-api', uptimeSeconds: Math.floor((Date.now() - startedAt) / 1000), persistence: usePostgres ? 'postgres' : 'memory-dev' }, correlationId);
   }
   if (req.method === 'GET' && url.pathname === '/readyz') {
+    if (pool) {
+      try { await pool.query('select 1'); } catch { return json(503, { status: 'not-ready' }, correlationId); }
+    }
     return json(200, { status: 'ready' }, correlationId);
   }
 
@@ -71,7 +78,7 @@ async function handle(req: IncomingMessage): Promise<Response> {
   }
 }
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   try {
     const response = await handle(req);
     res.statusCode = response.status;
@@ -83,4 +90,6 @@ createServer(async (req, res) => {
     res.setHeader('content-type', 'application/json');
     res.end(JSON.stringify({ error: 'Internal server error' }));
   }
-}).listen(port, () => console.info(`JARVIS API listening on :${port}`));
+});
+
+server.listen(port, () => console.info(`JARVIS API listening on :${port} (${usePostgres ? 'postgres' : 'development-memory'} persistence)`));
