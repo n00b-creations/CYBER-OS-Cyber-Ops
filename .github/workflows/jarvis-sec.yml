@@ -3,9 +3,9 @@ name: JARVIS-SEC CI
 on:
   push:
     branches: [main]
-    paths: ['apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'package.json']
+    paths: ['apps/api/**', 'apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'infrastructure/database/**', 'package.json']
   pull_request:
-    paths: ['apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'package.json']
+    paths: ['apps/api/**', 'apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'infrastructure/database/**', 'package.json']
 
 jobs:
   verify:
@@ -17,5 +17,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm install
+      - run: npm run type-check --workspace=@cyber-os/api
       - run: npm run type-check --workspace=@cyber-os/jarvis-sec
+      - run: npm run build:api
       - run: npm run build:jarvis
