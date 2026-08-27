@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer, type IncomingMessage } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { AuthError, Authenticator, requirePermission, type AuthPrincipal } from './auth.js';
 import { audit, ConsoleAuditSink } from './audit.js';
@@ -13,19 +13,11 @@ const startedAt = Date.now();
 function json(status: number, body: unknown, correlationId: string): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
-      'x-correlation-id': correlationId
-    }
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-correlation-id': correlationId }
   });
 }
 
-function requestToFetchRequest(req: Parameters<ReturnType<typeof createServer>['on']>[1]): Request {
-  throw new Error('unreachable');
-}
-
-async function handle(req: import('node:http').IncomingMessage): Promise<Response> {
+async function handle(req: IncomingMessage): Promise<Response> {
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
   const correlationId = req.headers['x-correlation-id']?.toString() || randomUUID();
 
@@ -55,21 +47,18 @@ async function handle(req: import('node:http').IncomingMessage): Promise<Respons
       await audit(auditSink, principal, { correlationId, action: 'identity.read', resourceType: 'user', resourceId: principal.userId, outcome: 'success', metadata: {} });
       return json(200, { userId: principal.userId, organizationId: principal.organizationId, roles: principal.roles, permissions: principal.permissions }, correlationId);
     }
-
     if (req.method === 'GET' && url.pathname === '/v1/leads') {
       requirePermission(principal, 'lead:read');
       const leads = await repository.listLeads(principal.organizationId);
       await audit(auditSink, principal, { correlationId, action: 'lead.list', resourceType: 'lead', outcome: 'success', metadata: { count: leads.length } });
       return json(200, { data: leads }, correlationId);
     }
-
     if (req.method === 'GET' && url.pathname === '/v1/opportunities') {
       requirePermission(principal, 'opportunity:read');
       const opportunities = await repository.listOpportunities(principal.organizationId);
       await audit(auditSink, principal, { correlationId, action: 'opportunity.list', resourceType: 'opportunity', outcome: 'success', metadata: { count: opportunities.length } });
       return json(200, { data: opportunities }, correlationId);
     }
-
     return json(404, { error: 'Not found', correlationId }, correlationId);
   } catch (error) {
     if (error instanceof AuthError) {
@@ -95,5 +84,3 @@ createServer(async (req, res) => {
     res.end(JSON.stringify({ error: 'Internal server error' }));
   }
 }).listen(port, () => console.info(`JARVIS API listening on :${port}`));
-
-void requestToFetchRequest;
