@@ -7,9 +7,11 @@
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "dev": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=@cyber-os/api",
     "dev:jarvis": "npm run dev --workspace=@cyber-os/jarvis-sec",
     "build": "npm run build -ws",
     "build:packages": "npm run build --ws --workspaces-update-depth 1",
+    "build:api": "npm run build --workspace=@cyber-os/api",
     "build:jarvis": "npm run build --workspace=@cyber-os/jarvis-sec",
     "test": "npm run test -ws",
     "lint": "npm run lint -ws",
