@@ -48,7 +48,9 @@ export class ApiClient {
   opportunities() { return this.request<{ data: ApiOpportunity[] }>('/v1/opportunities'); }
 }
 
-export function createApiClient(): ApiClient | null {
+/** Development-only bridge. Production auth must supply an in-memory token. */
+export function createDevelopmentApiClient(): ApiClient | null {
+  if (!import.meta.env.DEV) return null;
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
   const accessToken = import.meta.env.VITE_DEV_ACCESS_TOKEN;
   if (!baseUrl || !accessToken) return null;
