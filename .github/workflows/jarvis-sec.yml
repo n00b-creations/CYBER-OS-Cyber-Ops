@@ -15,8 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
       - run: npm install
       - run: npm run type-check --workspace=@cyber-os/api
       - run: npm run type-check --workspace=@cyber-os/jarvis-sec
+      - run: npm run test --workspace=@cyber-os/api
       - run: npm run build:api
       - run: npm run build:jarvis
