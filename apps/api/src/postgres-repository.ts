@@ -1,25 +1,48 @@
-import { Pool } from 'pg';
+import { Pool, type PoolClient } from 'pg';
 import type { CrmRepository, LeadRecord, OpportunityRecord } from './repository.js';
+
+async function withTenant<T>(pool: Pool, organizationId: string, work: (client: PoolClient) => Promise<T>): Promise<T> {
+  const client = await pool.connect();
+  try {
+    await client.query('begin');
+    await client.query("select set_config('app.organization_id', $1, true)", [organizationId]);
+    const result = await work(client);
+    await client.query('commit');
+    return result;
+  } catch (error) {
+    await client.query('rollback').catch(() => undefined);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 
 export class PostgresCrmRepository implements CrmRepository {
   constructor(private readonly pool: Pool) {}
 
   async listLeads(organizationId: string): Promise<LeadRecord[]> {
-    const result = await this.pool.query<LeadRecord>(
-      `select id, organization_id as "organizationId", name, company, email, source, score, stage, created_at as "createdAt", updated_at as "updatedAt"
-       from leads where organization_id = $1 order by score desc, created_at desc`,
-      [organizationId]
-    );
-    return result.rows;
+    return withTenant(this.pool, organizationId, async client => {
+      const result = await client.query<LeadRecord>(
+        `select id, organization_id as "organizationId", name, company, email, source, score, stage,
+                created_at as "createdAt", updated_at as "updatedAt"
+           from leads
+          order by score desc, created_at desc`,
+      );
+      return result.rows;
+    });
   }
 
   async listOpportunities(organizationId: string): Promise<OpportunityRecord[]> {
-    const result = await this.pool.query<OpportunityRecord>(
-      `select id, organization_id as "organizationId", name, company, value::float8 as value, stage, probability, owner_user_id as "ownerUserId", created_at as "createdAt", updated_at as "updatedAt"
-       from opportunities where organization_id = $1 order by updated_at desc`,
-      [organizationId]
-    );
-    return result.rows;
+    return withTenant(this.pool, organizationId, async client => {
+      const result = await client.query<OpportunityRecord>(
+        `select id, organization_id as "organizationId", name, company, value::float8 as value,
+                stage, probability, owner_user_id as "ownerUserId",
+                created_at as "createdAt", updated_at as "updatedAt"
+           from opportunities
+          order by updated_at desc`,
+      );
+      return result.rows;
+    });
   }
 }
 
