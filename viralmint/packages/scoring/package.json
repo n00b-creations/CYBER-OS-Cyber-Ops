@@ -1,0 +1,8 @@
+{
+  "name": "@viralmint/scoring",
+  "private": true,
+  "main": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "devDependencies": { "typescript": "^5.9.0" }
+}
