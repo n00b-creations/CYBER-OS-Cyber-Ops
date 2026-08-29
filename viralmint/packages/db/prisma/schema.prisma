@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OpportunityStatus { DISCOVERED ANALYZING VALIDATING SIMULATING APPROVAL_REQUIRED APPROVED REJECTED LAUNCHED ARCHIVED }
+enum ApprovalStatus { PENDING APPROVED REJECTED EXPIRED }
+enum SignalType { SOCIAL NEWS SEARCH MARKET ONCHAIN CULTURAL }
+
+model Signal {
+  id String @id @default(cuid())
+  source String
+  externalId String?
+  type SignalType
+  title String?
+  content String?
+  url String?
+  author String?
+  publishedAt DateTime?
+  capturedAt DateTime @default(now())
+  velocity Float?
+  sentiment Float?
+  engagement Float?
+  metadata Json?
+  narrativeId String?
+  narrative Narrative? @relation(fields: [narrativeId], references: [id])
+  @@index([type, capturedAt])
+  @@index([narrativeId])
+}
+
+model Narrative {
+  id String @id @default(cuid())
+  name String
+  description String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  signalCount Int @default(0)
+  velocity Float @default(0)
+  momentum Float @default(0)
+  sentiment Float @default(0)
+  novelty Float @default(0)
+  confidence Float @default(0)
+  metadata Json?
+  signals Signal[]
+  opportunities Opportunity[]
+  @@index([momentum])
+}
+
+model MarketSnapshot {
+  id String @id @default(cuid())
+  chainId String
+  dexId String
+  pairAddress String
+  baseAddress String
+  baseSymbol String
+  quoteAddress String?
+  quoteSymbol String?
+  priceUsd Decimal?
+  liquidityUsd Decimal?
+  volume24h Decimal?
+  marketCap Decimal?
+  fdv Decimal?
+  txBuys Int?
+  txSells Int?
+  priceChange1h Float?
+  priceChange24h Float?
+  boostActive Int?
+  capturedAt DateTime @default(now())
+  @@index([chainId, baseAddress])
+  @@index([capturedAt])
+}
+
+model Opportunity {
+  id String @id @default(cuid())
+  narrativeId String
+  narrative Narrative @relation(fields: [narrativeId], references: [id])
+  status OpportunityStatus @default(DISCOVERED)
+  viralityScore Float @default(0)
+  marketScore Float @default(0)
+  riskScore Float @default(0)
+  confidence Float @default(0)
+  opportunityScore Float @default(0)
+  rationale Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  candidates TokenCandidate[]
+  simulations Simulation[]
+  approvals Approval[]
+  @@index([status])
+  @@index([opportunityScore])
+}
+
+model TokenCandidate {
+  id String @id @default(cuid())
+  opportunityId String
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id])
+  name String
+  symbol String
+  description String?
+  narrative String?
+  visualPrompt String?
+  confidence Float @default(0)
+  metadata Json?
+  createdAt DateTime @default(now())
+}
+
+model Simulation {
+  id String @id @default(cuid())
+  opportunityId String
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id])
+  scenario String
+  startingLiquidity Decimal?
+  simulatedVolume Decimal?
+  maxDrawdown Float?
+  volatility Float?
+  survivalScore Float?
+  result Json?
+  createdAt DateTime @default(now())
+}
+
+model Approval {
+  id String @id @default(cuid())
+  opportunityId String
+  opportunity Opportunity @relation(fields: [opportunityId], references: [id])
+  status ApprovalStatus @default(PENDING)
+  requestedAt DateTime @default(now())
+  decidedAt DateTime?
+  requestedBy String?
+  decidedBy String?
+  reason String?
+  @@index([status])
+}
+
+model AuditEvent {
+  id String @id @default(cuid())
+  actor String
+  action String
+  resource String
+  resourceId String?
+  metadata Json?
+  createdAt DateTime @default(now())
+  @@index([resource, resourceId])
+  @@index([createdAt])
+}
