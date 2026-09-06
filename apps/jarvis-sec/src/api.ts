@@ -31,21 +31,50 @@ export type ApiIdentity = {
   permissions: string[];
 };
 
+export type CreateLeadRequest = {
+  name: string;
+  company: string;
+  email: string;
+  source: string;
+  score?: number;
+  stage?: 'new' | 'qualified' | 'opportunity' | 'won' | 'lost';
+};
+
+export type CreateOpportunityRequest = {
+  name: string;
+  company: string;
+  value: number;
+  stage?: 'discovery' | 'qualification' | 'proposal' | 'negotiation' | 'won' | 'lost';
+  probability?: number;
+  ownerUserId?: string;
+};
+
 export class ApiClient {
   constructor(private readonly baseUrl: string, private readonly accessToken: string) {}
 
-  private async request<T>(path: string): Promise<T> {
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}${path}`, {
-      headers: { accept: 'application/json', authorization: `Bearer ${this.accessToken}` },
+      ...init,
+      headers: {
+        accept: 'application/json',
+        authorization: `Bearer ${this.accessToken}`,
+        ...(init.body ? { 'content-type': 'application/json' } : {}),
+        ...init.headers,
+      },
       credentials: 'omit',
     });
-    if (!response.ok) throw new Error(`JARVIS API request failed: ${response.status}`);
+    if (!response.ok) {
+      const detail = await response.json().catch(() => null) as { error?: string } | null;
+      throw new Error(detail?.error || `JARVIS API request failed: ${response.status}`);
+    }
     return response.json() as Promise<T>;
   }
 
   me() { return this.request<ApiIdentity>('/v1/me'); }
   leads() { return this.request<{ data: ApiLead[] }>('/v1/leads'); }
   opportunities() { return this.request<{ data: ApiOpportunity[] }>('/v1/opportunities'); }
+  createLead(input: CreateLeadRequest) { return this.request<{ data: ApiLead }>('/v1/leads', { method: 'POST', body: JSON.stringify(input) }); }
+  createOpportunity(input: CreateOpportunityRequest) { return this.request<{ data: ApiOpportunity }>('/v1/opportunities', { method: 'POST', body: JSON.stringify(input) }); }
 }
 
 /** Development-only bridge. Production auth must supply an in-memory token. */
