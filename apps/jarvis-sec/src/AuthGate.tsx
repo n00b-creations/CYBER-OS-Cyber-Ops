@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createOidcClient, type OidcClient } from './auth';
+import { setRuntimeAccessToken } from './api';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const oidc = useMemo(() => createOidcClient(), []);
@@ -16,7 +17,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         await oidc.initialize();
         if (callback) await oidc.handleCallback();
         if (!cancelled) {
-          (globalThis as { __JARVIS_ACCESS_TOKEN__?: string }).__JARVIS_ACCESS_TOKEN__ = oidc.token;
+          setRuntimeAccessToken(oidc.token);
           setClient(oidc);
         }
       } catch (e) {
