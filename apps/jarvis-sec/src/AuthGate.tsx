@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ApiClient } from './api';
 import { createOidcClient, type OidcClient } from './auth';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
@@ -16,7 +15,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
       try {
         await oidc.initialize();
         if (callback) await oidc.handleCallback();
-        if (!cancelled) setClient(oidc);
+        if (!cancelled) {
+          (globalThis as { __JARVIS_ACCESS_TOKEN__?: string }).__JARVIS_ACCESS_TOKEN__ = oidc.token;
+          setClient(oidc);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Authentication failed');
       } finally {
@@ -30,13 +32,6 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   if (loading) return <AuthScreen title="AUTHENTICATING" detail="Establishing a secure JARVIS-SEC session…" />;
   if (error) return <AuthScreen title="AUTHENTICATION ERROR" detail={error} action={<button onClick={() => window.location.assign('/')}>RETRY</button>} />;
   if (!client?.token) return <AuthScreen title="JARVIS-SEC" detail="Sign in to access your organization workspace." action={<button className="primary" onClick={() => client.beginLogin()}>SIGN IN WITH SSO</button>} />;
-
-  return <AuthenticatedApp token={client.token}>{children}</AuthenticatedApp>;
-}
-
-function AuthenticatedApp({ token, children }: { token: string; children: React.ReactNode }) {
-  const api = useMemo(() => new ApiClient(import.meta.env.VITE_API_BASE_URL ?? '', token), [token]);
-  void api;
   return <>{children}</>;
 }
 
