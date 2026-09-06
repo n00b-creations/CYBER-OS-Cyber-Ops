@@ -1,0 +1,24 @@
+name: JARVIS-SEC CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/api/**', 'apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'infrastructure/database/**', 'package.json']
+  pull_request:
+    paths: ['apps/api/**', 'apps/jarvis-sec/**', 'packages/identity-core/**', 'packages/crm-core/**', 'packages/lead-intelligence/**', 'packages/notification-center/**', 'packages/visual-engine/**', 'infrastructure/database/**', 'package.json']
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm install
+      - run: npm run type-check --workspace=@cyber-os/api
+      - run: npm run type-check --workspace=@cyber-os/jarvis-sec
+      - run: npm run test --workspace=@cyber-os/api
+      - run: npm run build:api
+      - run: npm run build:jarvis
