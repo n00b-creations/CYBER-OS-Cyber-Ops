@@ -77,11 +77,11 @@ export class ApiClient {
   createOpportunity(input: CreateOpportunityRequest) { return this.request<{ data: ApiOpportunity }>('/v1/opportunities', { method: 'POST', body: JSON.stringify(input) }); }
 }
 
-/** Development-only bridge. Production auth must supply an in-memory token. */
+/** Development bridge or in-memory production session token. Never persists credentials. */
 export function createDevelopmentApiClient(): ApiClient | null {
-  if (!import.meta.env.DEV) return null;
   const baseUrl = import.meta.env.VITE_API_BASE_URL;
-  const accessToken = import.meta.env.VITE_DEV_ACCESS_TOKEN;
-  if (!baseUrl || !accessToken) return null;
-  return new ApiClient(baseUrl, accessToken);
+  const accessToken = import.meta.env.DEV ? import.meta.env.VITE_DEV_ACCESS_TOKEN : undefined;
+  const runtimeToken = (globalThis as { __JARVIS_ACCESS_TOKEN__?: string }).__JARVIS_ACCESS_TOKEN__;
+  if (!baseUrl || !(accessToken || runtimeToken)) return null;
+  return new ApiClient(baseUrl, accessToken || runtimeToken!);
 }
