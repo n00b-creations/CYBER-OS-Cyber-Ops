@@ -1,3 +1,5 @@
+import { createRemoteJWKSet, jwtVerify } from 'jose';
+
 export type OidcConfig = {
   issuer: string;
   clientId: string;
@@ -5,7 +7,12 @@ export type OidcConfig = {
   scopes?: string;
 };
 
-type Discovery = { authorization_endpoint: string; token_endpoint: string; issuer: string };
+type Discovery = {
+  authorization_endpoint: string;
+  token_endpoint: string;
+  issuer: string;
+  jwks_uri: string;
+};
 type TokenResponse = { access_token: string; token_type: string; expires_in?: number; id_token?: string };
 
 const verifierKey = 'jarvis.oidc.verifier';
@@ -29,6 +36,7 @@ async function challenge(verifier: string): Promise<string> {
 
 export class OidcClient {
   private discovery?: Discovery;
+  private jwks?: ReturnType<typeof createRemoteJWKSet>;
   private accessToken?: string;
 
   constructor(private readonly config: OidcConfig) {}
@@ -38,10 +46,11 @@ export class OidcClient {
     const response = await fetch(`${issuer}/.well-known/openid-configuration`, { credentials: 'omit' });
     if (!response.ok) throw new Error(`OIDC discovery failed: ${response.status}`);
     const discovery = await response.json() as Discovery;
-    if (!discovery.authorization_endpoint || !discovery.token_endpoint || discovery.issuer !== issuer) {
+    if (!discovery.authorization_endpoint || !discovery.token_endpoint || !discovery.jwks_uri || discovery.issuer.replace(/\/$/, '') !== issuer) {
       throw new Error('OIDC discovery document is invalid');
     }
     this.discovery = discovery;
+    this.jwks = createRemoteJWKSet(new URL(discovery.jwks_uri));
   }
 
   async beginLogin(): Promise<void> {
@@ -72,8 +81,11 @@ export class OidcClient {
     const state = params.get('state');
     const expectedState = sessionStorage.getItem(stateKey);
     const verifier = sessionStorage.getItem(verifierKey);
+    const expectedNonce = sessionStorage.getItem(nonceKey);
     if (params.get('error')) throw new Error(params.get('error_description') ?? params.get('error')!);
-    if (!code || !state || !expectedState || state !== expectedState || !verifier) throw new Error('Invalid OIDC callback state');
+    if (!code || !state || !expectedState || state !== expectedState || !verifier || !expectedNonce) {
+      throw new Error('Invalid OIDC callback state');
+    }
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: this.config.clientId,
@@ -85,6 +97,14 @@ export class OidcClient {
     if (!response.ok) throw new Error(`OIDC token exchange failed: ${response.status}`);
     const token = await response.json() as TokenResponse;
     if (!token.access_token) throw new Error('OIDC provider returned no access token');
+    if (!token.id_token || !this.jwks) throw new Error('OIDC provider returned no verifiable ID token');
+
+    await jwtVerify(token.id_token, this.jwks, {
+      issuer: this.discovery!.issuer,
+      audience: this.config.clientId,
+      nonce: expectedNonce,
+    });
+
     this.accessToken = token.access_token;
     sessionStorage.removeItem(verifierKey);
     sessionStorage.removeItem(stateKey);
