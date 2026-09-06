@@ -14,6 +14,12 @@
 - error boundaries and failure states
 - backup/restore runbook
 
+### Tenant isolation verification gate
+
+PostgreSQL RLS is defense in depth behind API authorization. Tenant-scoped repository operations set `app.organization_id` with `SET LOCAL` inside a transaction before querying tenant tables. The application database role must not be a superuser, must not have `BYPASSRLS`, and must not own the protected tables.
+
+`apps/api/src/tenant-isolation.integration.test.ts` verifies that Organization A and B cannot read each other's records, cross-tenant SELECTs return zero rows, and cross-tenant INSERTs are rejected. It is skipped unless `TEST_DATABASE_URL`, `TEST_DATABASE_ADMIN_URL`, and `TEST_DATABASE_MIGRATIONS_APPLIED=true` are supplied. The test database must already have migrations 001 and 002 applied, and the application test role must not bypass RLS.
+
 ## P1 — revenue operations
 
 - lead/company/contact records
