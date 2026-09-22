@@ -17,7 +17,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@cyber-os/shared": "workspace:*"
+    "@cyber-os/shared": "0.1.0",
   },
   "devDependencies": {
     "typescript": "^5.3.0"
