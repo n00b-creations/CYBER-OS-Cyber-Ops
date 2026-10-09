@@ -57,7 +57,27 @@ pnpm --filter @viralmint/api dev
 pnpm --filter @viralmint/web dev
 ```
 
-The API listens on `:4000`; the web app uses Next.js defaults on `:3000`.
+The API listens on `:4000`; the web app uses Next.js defaults on `:3000`. The ingestion and processor workers can be started in separate terminals with `pnpm --filter @viralmint/ingestion dev` and `pnpm --filter @viralmint/processor dev` after the database schema has been generated and migrated.
+
+## Validation and implementation status
+
+Phase 1 is an in-progress prototype, not a production trading system. The command-center cards currently use hard-coded sample values; the `LIVE` label must not be interpreted as proof that the dashboard is connected to live feeds.
+
+The scoring package includes deterministic weighted scores and unit tests for repeatability, score bounds, competition weighting, and non-finite inputs. The GitHub PR currently has no reported CI workflow runs or commit status checks, so test execution still needs to be confirmed in a local environment or by adding CI.
+
+Run the scoring tests from this directory after installing dependencies:
+
+```bash
+pnpm install
+pnpm --filter @viralmint/scoring test
+pnpm --filter @viralmint/scoring typecheck
+```
+
+Current known gaps:
+- The web dashboard is a static mockup; it does not yet query the API.
+- The ingestion worker publishes market payloads to Redis, while the processor writes snapshots to PostgreSQL; consumer recovery, retry/dead-letter handling, and duplicate protection need hardening.
+- Narrative/social/news ingestion, a risk engine, historical replay/backtesting, and a simulation workflow remain incomplete.
+- Add automated tests and CI for the API, DEX adapter, normalization, and stream processor before treating this as reliable.
 
 ## DEX Screener
 
