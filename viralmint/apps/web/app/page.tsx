@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <main className="grid">
       <header>
-        <div className="label">Autonomous cultural intelligence</div>
+        <div className="label">Narrative intelligence · sample dashboard</div>
         <h1>ViralMint</h1>
         <p>Real-time narrative discovery, market validation and opportunity scoring.</p>
       </header>
@@ -17,7 +17,7 @@ export default function Home() {
         <Metric label="Virality" value="87" />
         <Metric label="Opportunities" value="14" />
         <Metric label="Market signals" value="231" />
-        <Metric label="System" value="LIVE" />
+        <Metric label="System" value="DEMO" />
       </section>
 
       <section className="grid main">
