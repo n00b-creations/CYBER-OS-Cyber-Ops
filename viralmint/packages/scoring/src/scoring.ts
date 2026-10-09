@@ -22,17 +22,17 @@ function assertFiniteInputs(input: object, label: string): void {
 
 export function calculateViralityScore(input: ViralityInput): number {
   assertFiniteInputs(input, "virality");
-  return Math.round(clamp(
-    input.velocity * 0.22 +
-    input.reach * 0.12 +
-    input.novelty * 0.15 +
-    input.crossPlatform * 0.13 +
-    input.culturalRelevance * 0.14 +
-    input.memeDurability * 0.10 +
-    input.cryptoRelevance * 0.09 +
+  return Math.round(
+    clamp(input.velocity) * 0.22 +
+    clamp(input.reach) * 0.12 +
+    clamp(input.novelty) * 0.15 +
+    clamp(input.crossPlatform) * 0.13 +
+    clamp(input.culturalRelevance) * 0.14 +
+    clamp(input.memeDurability) * 0.10 +
+    clamp(input.cryptoRelevance) * 0.09 +
     // Less competing attention makes a narrative more differentiated.
     (100 - clamp(input.competition)) * 0.05
-  ));
+  );
 }
 
 export interface OpportunityInput {
@@ -46,12 +46,12 @@ export interface OpportunityInput {
 
 export function calculateOpportunityScore(input: OpportunityInput): number {
   assertFiniteInputs(input, "opportunity");
-  return Math.round(clamp(
-    input.virality * 0.35 +
-    input.market * 0.20 +
-    input.novelty * 0.10 +
-    input.timing * 0.15 +
-    input.safety * 0.05 +
-    input.confidence * 0.15
-  ));
+  return Math.round(
+    clamp(input.virality) * 0.35 +
+    clamp(input.market) * 0.20 +
+    clamp(input.novelty) * 0.10 +
+    clamp(input.timing) * 0.15 +
+    clamp(input.safety) * 0.05 +
+    clamp(input.confidence) * 0.15
+  );
 }
