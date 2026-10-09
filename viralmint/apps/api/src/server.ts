@@ -7,16 +7,33 @@ import { calculateOpportunityScore, calculateViralityScore } from "@viralmint/sc
 const app = Fastify({ logger: true });
 const dex = new DexScreenerClient(process.env.DEXSCREENER_BASE_URL);
 
-await app.register(cors, { origin: true });
+await app.register(cors, {
+  origin: process.env.WEB_ORIGIN ?? "http://localhost:3000"
+});
 await app.register(sensible);
 
 app.get("/health", async () => ({ status: "ok", service: "viralmint-api" }));
 
-app.get("/api/v1/markets/search", async (request) => {
-  const { q } = request.query as { q?: string };
-  if (!q) throw app.httpErrors.badRequest("q is required");
-  return { query: q, pairs: await dex.search(q) };
-});
+app.get<{ Querystring: { q: string } }>(
+  "/api/v1/markets/search",
+  {
+    schema: {
+      querystring: {
+        type: "object",
+        required: ["q"],
+        additionalProperties: false,
+        properties: {
+          q: { type: "string", minLength: 1, maxLength: 100 }
+        }
+      }
+    }
+  },
+  async (request) => {
+    const query = request.query.q.trim();
+    if (!query) throw app.httpErrors.badRequest("q must not be blank");
+    return { query, pairs: await dex.search(query) };
+  }
+);
 
 app.get("/api/v1/scoring/demo", async () => {
   const virality = calculateViralityScore({
