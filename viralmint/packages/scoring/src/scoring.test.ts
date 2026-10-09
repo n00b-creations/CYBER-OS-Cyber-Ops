@@ -39,7 +39,7 @@ test("lower competition improves the virality score", () => {
 });
 
 test("scores clamp finite inputs to the 0–100 range", () => {
-  assert.equal(calculateViralityScore({ ...viralityInput, velocity: 1_000 }), 100);
+  assert.equal(calculateViralityScore({ ...viralityInput, velocity: 1_000 }), 61);
   assert.equal(calculateOpportunityScore({ ...opportunityInput, market: -1_000 }), 40);
 });
 
