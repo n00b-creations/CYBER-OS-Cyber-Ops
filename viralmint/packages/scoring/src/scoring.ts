@@ -6,12 +6,22 @@ export interface ViralityInput {
   culturalRelevance: number;
   memeDurability: number;
   cryptoRelevance: number;
+  /** Higher values mean more competing attention/opportunities. */
   competition: number;
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(100, n));
 
+function assertFiniteInputs(input: object, label: string): void {
+  for (const [key, value] of Object.entries(input)) {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new TypeError(`${label}.${key} must be a finite number`);
+    }
+  }
+}
+
 export function calculateViralityScore(input: ViralityInput): number {
+  assertFiniteInputs(input, "virality");
   return Math.round(clamp(
     input.velocity * 0.22 +
     input.reach * 0.12 +
@@ -20,7 +30,8 @@ export function calculateViralityScore(input: ViralityInput): number {
     input.culturalRelevance * 0.14 +
     input.memeDurability * 0.10 +
     input.cryptoRelevance * 0.09 +
-    input.competition * 0.05
+    // Less competing attention makes a narrative more differentiated.
+    (100 - clamp(input.competition)) * 0.05
   ));
 }
 
@@ -34,6 +45,7 @@ export interface OpportunityInput {
 }
 
 export function calculateOpportunityScore(input: OpportunityInput): number {
+  assertFiniteInputs(input, "opportunity");
   return Math.round(clamp(
     input.virality * 0.35 +
     input.market * 0.20 +
