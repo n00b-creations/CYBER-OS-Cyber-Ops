@@ -10,7 +10,7 @@ const PairSchema = z.object({
   priceUsd: z.string().nullable().optional(),
   txns: z.record(z.string(), z.object({ buys: z.number(), sells: z.number() })).optional(),
   volume: z.record(z.string(), z.number()).optional(),
-  priceChange: z.record(z.number()).nullable().optional(),
+  priceChange: z.record(z.string(), z.number()).nullable().optional(),
   liquidity: z.object({ usd: z.number().nullable().optional(), base: z.number().nullable().optional(), quote: z.number().nullable().optional() }).nullable().optional(),
   fdv: z.number().nullable().optional(),
   marketCap: z.number().nullable().optional(),
