@@ -132,7 +132,7 @@ while (true) {
 
     const result = await redis.xreadgroup(
       "GROUP", group, consumer, "COUNT", 25, "BLOCK", 5000, "STREAMS", stream, ">"
-    );
+    ) as [string, [string, string[]][]][] | null;
     if (!result) continue;
 
     for (const [, entries] of result) await handleEntries(entries);
