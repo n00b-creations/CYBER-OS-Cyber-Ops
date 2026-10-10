@@ -7,9 +7,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum OpportunityStatus { DISCOVERED ANALYZING VALIDATING SIMULATING APPROVAL_REQUIRED APPROVED REJECTED LAUNCHED ARCHIVED }
-enum ApprovalStatus { PENDING APPROVED REJECTED EXPIRED }
-enum SignalType { SOCIAL NEWS SEARCH MARKET ONCHAIN CULTURAL }
+enum OpportunityStatus {
+  DISCOVERED
+  ANALYZING
+  VALIDATING
+  SIMULATING
+  APPROVAL_REQUIRED
+  APPROVED
+  REJECTED
+  LAUNCHED
+  ARCHIVED
+}
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+enum SignalType {
+  SOCIAL
+  NEWS
+  SEARCH
+  MARKET
+  ONCHAIN
+  CULTURAL
+}
 
 model Signal {
   id String @id @default(cuid())
