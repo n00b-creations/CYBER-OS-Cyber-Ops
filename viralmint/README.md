@@ -53,6 +53,7 @@ pnpm install
 docker compose up -d
 
 pnpm --filter @viralmint/db generate
+pnpm --filter @viralmint/db push
 pnpm --filter @viralmint/api dev
 pnpm --filter @viralmint/web dev
 ```
@@ -63,7 +64,7 @@ The API listens on `:4000`; the web app uses Next.js defaults on `:3000`. Set `W
 
 Phase 1 is an in-progress prototype, not a production trading system. The dashboard now queries the Fastify API for live DEX Screener market pairs. Narrative scoring, social/news ingestion, risk validation, and simulation are not yet connected to this market-search screen.
 
-The scoring package includes deterministic weighted scores and unit tests for repeatability, score bounds, competition weighting, and non-finite inputs. A GitHub Actions workflow has been added for scoring tests, package type-checks, and a web build. The workflow must produce a successful run before the branch can be considered validated.
+The scoring package includes deterministic weighted scores and unit tests for repeatability, score bounds, competition weighting, and non-finite inputs. A GitHub Actions workflow has been added for scoring tests, package type-checks, and a web build. The first observed run failed during Prisma schema generation because enum values were written on one line; that schema format has been corrected. A successful post-fix run still needs to be observed before the branch can be considered validated.
 
 Run the scoring tests from this directory after installing dependencies:
 
@@ -75,7 +76,7 @@ pnpm --filter @viralmint/scoring typecheck
 
 Current known gaps:
 - The web dashboard currently supports live DEX Screener market-pair search; it is not yet a narrative/opportunity dashboard and does not persist search results to the UI.
-- The ingestion worker publishes market payloads to Redis, while the processor writes snapshots to PostgreSQL; consumer recovery, retry/dead-letter handling, and duplicate protection need hardening.
+- The ingestion worker publishes market payloads to Redis, while the processor writes snapshots to PostgreSQL; the processor now reclaims stale pending entries, retries failed writes, sends repeatedly failing events to a bounded dead-letter stream, and uses the Redis stream entry ID as an idempotency key. Apply the Prisma schema with `pnpm --filter @viralmint/db push` before starting the processor.
 - Narrative/social/news ingestion, a risk engine, historical replay/backtesting, and a simulation workflow remain incomplete.
 - Add automated tests and CI for the API, DEX adapter, normalization, and stream processor before treating this as reliable.
 
