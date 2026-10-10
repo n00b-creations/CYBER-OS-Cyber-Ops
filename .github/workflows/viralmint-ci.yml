@@ -1,0 +1,48 @@
+name: ViralMint CI
+
+on:
+  pull_request:
+    paths:
+      - "viralmint/**"
+      - ".github/workflows/viralmint-ci.yml"
+  push:
+    paths:
+      - "viralmint/**"
+      - ".github/workflows/viralmint-ci.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://viralmint:viralmint@localhost:5432/viralmint
+    defaults:
+      run:
+        working-directory: viralmint
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.14.0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @viralmint/db generate
+      - name: Run scoring unit tests
+        run: pnpm --filter @viralmint/scoring test
+      - name: Type-check workspace packages
+        run: |
+          pnpm --filter @viralmint/scoring typecheck
+          pnpm --filter @viralmint/dex-screener typecheck
+          pnpm --filter @viralmint/db typecheck
+          pnpm --filter @viralmint/api typecheck
+          pnpm --filter @viralmint/ingestion typecheck
+          pnpm --filter @viralmint/processor typecheck
+          pnpm --filter @viralmint/web typecheck
+      - name: Build web app
+        run: pnpm --filter @viralmint/web build

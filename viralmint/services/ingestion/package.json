@@ -1,0 +1,7 @@
+{
+  "name": "@viralmint/ingestion",
+  "private": true,
+  "scripts": { "dev": "tsx src/worker.ts", "build": "tsc", "typecheck": "tsc --noEmit" },
+  "dependencies": { "@viralmint/dex-screener": "workspace:*", "ioredis": "^5.7.0" },
+  "devDependencies": { "tsx": "^4.19.0", "typescript": "^5.9.0", "@types/node": "^24.0.0" }
+}
