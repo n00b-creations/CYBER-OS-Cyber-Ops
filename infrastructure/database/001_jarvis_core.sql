@@ -1,0 +1,16 @@
+-- JARVIS-SEC core tenant model.
+-- Production deployment should apply this through a migration runner.
+create table if not exists organizations (id uuid primary key, name text not null, created_at timestamptz not null default now());
+create table if not exists organization_members (organization_id uuid not null references organizations(id) on delete cascade, user_id text not null, role text not null check (role in ('owner','admin','operator','analyst','viewer')), created_at timestamptz not null default now(), primary key (organization_id, user_id));
+create table if not exists leads (id uuid primary key, organization_id uuid not null references organizations(id) on delete cascade, name text not null, company text not null, email text not null, source text not null, score integer not null default 0 check (score between 0 and 100), stage text not null default 'new' check (stage in ('new','qualified','opportunity','won','lost')), created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create index if not exists leads_org_stage_idx on leads(organization_id, stage);
+create index if not exists leads_org_score_idx on leads(organization_id, score desc);
+create table if not exists opportunities (id uuid primary key, organization_id uuid not null references organizations(id) on delete cascade, name text not null, company text not null, value numeric(14,2) not null default 0, stage text not null default 'discovery' check (stage in ('discovery','qualification','proposal','negotiation','won','lost')), probability integer not null default 0 check (probability between 0 and 100), owner_user_id text not null, created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create index if not exists opportunities_org_stage_idx on opportunities(organization_id, stage);
+create table if not exists lead_enrichment (id uuid primary key, organization_id uuid not null references organizations(id) on delete cascade, lead_id uuid not null references leads(id) on delete cascade, field_name text not null, value_json jsonb not null, source text not null, observed_at timestamptz not null, confidence numeric(5,4) not null check (confidence between 0 and 1), unique (lead_id, field_name, source, observed_at));
+create index if not exists lead_enrichment_org_lead_idx on lead_enrichment(organization_id, lead_id);
+create table if not exists audit_events (id uuid primary key, organization_id uuid not null references organizations(id) on delete cascade, actor_user_id text not null, session_id text, correlation_id text not null, action text not null, resource_type text not null, resource_id text, outcome text not null check (outcome in ('success','denied','failure')), metadata_json jsonb not null default '{}'::jsonb, created_at timestamptz not null default now());
+create index if not exists audit_org_created_idx on audit_events(organization_id, created_at desc);
+create index if not exists audit_correlation_idx on audit_events(correlation_id);
+-- Production deployment must add PostgreSQL RLS policies after the request-scoped organization setting is configured.
+-- Never trust a client-provided organization ID for authorization.
